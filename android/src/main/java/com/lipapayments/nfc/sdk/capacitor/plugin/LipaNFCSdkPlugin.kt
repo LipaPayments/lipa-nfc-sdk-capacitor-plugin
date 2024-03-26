@@ -5,9 +5,7 @@ import com.getcapacitor.*
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.google.gson.Gson
 import com.lipa.tap.attestation.domain.models.SDKTransactionEvent
-import com.lipa.tap.transaction.domain.models.SdkLifeCycleEvent
-import com.lipa.tap.utils.Env
-import com.lipa.tap.utils.LipaNfcSDK
+import com.lipa.tap.transaction.domain.SdkLifeCycleEvent
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -22,16 +20,28 @@ internal class LipaNFCSdkPlugin : Plugin() {
     override fun load() {
         super.load()
         Log.i(TAG, "Config: $config...")
-        config?.let {
-            Log.i(TAG, "Load initializing...")
-            init(
-                env = Env.TESTING,
-                apiKey = it.apiKey,
-                tenantId = it.tenantId,
-                getInTouchLink = it.getInTouchLink,
-                getInTouchText = it.getInTouchText,
-                enableBuiltInReceipt = true,
+        if (config == null) {
+            Log.i(
+                TAG,
+                "Initialization parameters are missing, please check if the config.json file is set if you wanna start the sdk when the plugin loads"
             )
+            return
+        } else {
+            with(config as SdkInitializationConfig) {
+                val key = this.apiKey
+                val tenant = this.tenantId
+                val link = this.getInTouchLink
+                val text = this.getInTouchText
+                Log.i(TAG, "Load initializing...")
+                init(
+                    env = Env.TESTING,
+                    apiKey = key,
+                    tenantId = tenant,
+                    getInTouchLink = link,
+                    getInTouchText = text,
+                    enableBuiltInReceipt = true,
+                )
+            }
         }
     }
 
@@ -76,7 +86,7 @@ internal class LipaNFCSdkPlugin : Plugin() {
         call: PluginCall? = null
     ) {
         LipaNfcSDK.initialise(
-            activity = activity,
+            application = activity.application,
             apiKey = apiKey,
             tenantId = tenantId,
             env = env,

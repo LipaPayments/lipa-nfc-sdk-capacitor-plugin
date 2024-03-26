@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
+
 ext {
     junitVersion = project.hasProperty('junitVersion') ? rootProject.ext.junitVersion : '4.13.2'
     androidxAppCompatVersion = project.hasProperty('androidxAppCompatVersion') ? rootProject.ext.androidxAppCompatVersion : '1.6.1'
@@ -16,7 +18,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.0.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'net.saliman:gradle-properties-plugin:1.4.6'
+        classpath 'net.saliman:gradle-properties-plugin:1.5.2'
     }
 }
 
@@ -62,6 +64,13 @@ android {
     kotlinOptions {
         jvmTarget = '11'
     }
+
+    dependencies {
+        implementation("io.github.pdvrieze.xmlutil:core-android:0.86.3")
+        implementation("io.github.pdvrieze.xmlutil:serialization-android:0.86.3") {
+            exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
+        }
+    }
 }
 
 repositories {
@@ -82,15 +91,13 @@ repositories {
     }
 }
 
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':capacitor-android')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation 'androidx.core:core-ktx:1.6.0'
 
-    implementation("io.github.pdvrieze.xmlutil:core-android:0.84.2")
-    implementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.0_rc.1+frozen.wbc_nullable_store_deviceid_nonce_fix.20240315.154438.78299453") {
+    implementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240322.102917.a0d2d2dd") {
         exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
     }
 
@@ -98,3 +105,6 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
 }
+
+
+
