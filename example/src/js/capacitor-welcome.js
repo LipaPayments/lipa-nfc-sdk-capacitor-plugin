@@ -1,7 +1,6 @@
 import { SplashScreen } from '@capacitor/splash-screen';
-import { Camera } from '@capacitor/camera';
 import config from '../assets/config/terminal-config.json';
-import { Env, LipaNFCSdk, LipaNFCSdkPlugin, SdkLifecycleEvent, SdkLifecycleEventResponse } from '@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin';
+import { LipaNFCSdk } from '@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin';
 
 window.customElements.define(
   'capacitor-welcome',
@@ -110,8 +109,7 @@ window.customElements.define(
             operatorId: config.operatorId,
             merchantName: config.merchantName,
           });
-          console.log("Linking done", linkingResult);
-          alert("Linking complete");
+          alert(linkingResult.result);
         } catch (e) {
           console.warn('User cancelled', e);
         }

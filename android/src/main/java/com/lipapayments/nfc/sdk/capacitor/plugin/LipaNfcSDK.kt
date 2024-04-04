@@ -81,7 +81,7 @@ object LipaNfcSDK {
     private lateinit var startupManager: StartupManager
     private var terminalNickname: String? = null
     private var initialised = false
-    private val TAG = "LipaNfcSDK"
+    private const val TAG = "LipaNfcSDK"
     // End SDK State
 
     fun initialise(
@@ -94,14 +94,9 @@ object LipaNfcSDK {
         enableBuiltInReceiptScreen: Boolean = true,
         onEvent: (SdkLifeCycleEvent) -> Unit,
     ) {
-        Log.d(TAG, "starting this mess")
-
         SDKScope.launch {// works
 
-            Log.d(TAG, "launch this mess")
             channelFlow {
-                Log.d(TAG, "channel this mess")
-                Log.d(TAG, "inner launch this mess")
                 init(
                     apiKey,
                     tenantId,
@@ -119,11 +114,9 @@ object LipaNfcSDK {
                 }
             }.collect {
                 try {
-                    Log.d(TAG, "collect this mess")
                     onEvent(it)
                     EventMap.onEvent(it)
                 } catch (e: Exception) {
-                    Log.d(TAG, "Failed to run init integrator callback")
                     e.printStackTrace()
                 }
             }
@@ -141,7 +134,6 @@ object LipaNfcSDK {
         enableBuiltInReceiptScreen: Boolean = true,
         onEvent: (SdkLifeCycleEvent) -> Unit,
     ) {
-        Log.d(TAG, "init this mess")
         if (!initialised) {
             LipaTapSDK.initialize(context = application,
                 getInTouchText = getInTouchText,
@@ -151,54 +143,45 @@ object LipaNfcSDK {
             initialised = true
         }
         onEvent(SdkInitialised)
-        Log.d(TAG, "configure this mess")
         NFCSdkConfiguration.configure(
             /*baseUrl =*/env.url,
             /*apiKey =*/ apiKey,
             /*tenantId =*/ tenantId,
         )
         onEvent(SdkConfigured)
-        Log.d(TAG, "startup this mess")
         startupManager = StartupManager(object : IStartupListener {
             override fun onSuccess() {
-                Log.d(TAG, "Startup Successful")
                 onEvent(SdkStartUpSuccess)
                 DeviceStateUIAdapter.setDeviceStateUIListener(object : IDeviceStateUIListener {
                     override fun onDeviceStateChange(activated: Boolean) {
                         if (!activated) {
-                            Log.d(TAG, "Device state changed to: Deactivated.")
                             onEvent(
-                                SdkLifeCycleEvent.SdkDeviceState(
+                                SdkDeviceState(
                                     DeviceState.DEACTIVATED,
                                     "Device state changed to: Deactivated."
                                 )
                             )
                         } else {
-                            Log.d(TAG, "Device state changed to: Activated.")
                             onEvent(SdkDeviceState(DeviceState.ACTIVATED, "Device state changed to: Activated."))
                         }
 
                     }
 
                     override fun onError(errorMessage: String) {
-                        Log.d(TAG, "Error checking device state. $errorMessage")
                         onEvent(SdkDeviceState(DeviceState.ERRORED, "Error checking device state. $errorMessage"))
                     }
                 })
             }
 
             override fun onError(error: String) {
-                Log.d(TAG, "Startup Error: $error")
                 onEvent(SdkStartUpError("Startup Error: $error"))
             }
         }, listOf(), object : VersionCheckCallback {
             override fun onResult(isValid: Boolean, isError: Boolean) {
                 if (isValid) {
-                    Log.d(TAG, "Valid Version")
                     onEvent(SdkVersionCheck(true, "Valid Version"))
                 } else {
                     if (isError) {
-                        Log.d(TAG, "Invalid Version")
                         onEvent(SdkVersionCheckError("Startup Error: Error validating version"))
                     } else {
                         onEvent(SdkVersionCheckError("Startup Error: Invalid Version,\n Please update."))
@@ -261,8 +244,7 @@ object LipaNfcSDK {
         amount: Long? = null,
         onEvent: (SDKTransactionEvent) -> Unit,
     ) {
-        SDKTransactionScope.launch { // under test
-            Log.d(TAG, "launch this mess")
+        SDKTransactionScope.launch {
             channelFlow {
                 transact(amount) { runBlocking { send(it) } }
                 awaitClose { /* KEEP ME RUNNING */ }
@@ -270,7 +252,6 @@ object LipaNfcSDK {
                 onEvent(it)
             }
         }
-
     }
 
     private fun transact(

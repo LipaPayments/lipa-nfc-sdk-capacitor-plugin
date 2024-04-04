@@ -1,5 +1,8 @@
 package com.lipapayments.nfc.sdk.capacitor.plugin
 
+import android.app.Activity
+import android.app.Application
+import android.os.Bundle
 import android.util.Log
 import com.getcapacitor.*
 import com.getcapacitor.annotation.CapacitorPlugin
@@ -17,63 +20,49 @@ internal class LipaNFCSdkPlugin : Plugin() {
         const val TAG = "LipaNFCSdkPlugin"
     }
 
+    private val application by lazy { activity.application }
+
     override fun load() {
-        super.load()
-        Log.i(TAG, "Config: $config...")
-        if (config == null) {
-            Log.i(
-                TAG,
-                "Initialization parameters are missing, please check if the config.json file is set if you wanna start the sdk when the plugin loads"
-            )
-            return
-        } else {
-            with(config as SdkInitializationConfig) {
-                val key = this.apiKey
-                val tenant = this.tenantId
-                val link = this.getInTouchLink
-                val text = this.getInTouchText
-                Log.i(TAG, "Load initializing...")
-                init(
-                    env = Env.TESTING,
-                    apiKey = key,
-                    tenantId = tenant,
-                    getInTouchLink = link,
-                    getInTouchText = text,
-                    enableBuiltInReceipt = true,
-                )
+        Log.i(TAG, "Loading...")
+        application.registerActivityLifecycleCallbacks(object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) = Unit
+
+            override fun onActivityPostCreated(activity: Activity, savedInstanceState: Bundle?) {
+                super.onActivityPostCreated(activity, savedInstanceState)
+                Log.i(TAG, "Config: $config...")
+                if (config == null) {
+                    Log.i(
+                        TAG,
+                        "Initialization parameters are missing, please check if the config.json file is set if you wanna start the sdk when the plugin loads"
+                    )
+                } else {
+                    with(config as SdkInitializationConfig) {
+                        val key = this.apiKey
+                        val tenant = this.tenantId
+                        val link = this.getInTouchLink
+                        val text = this.getInTouchText
+                        Log.i(TAG, "Load initializing...")
+                        init(
+                            env = Env.TESTING,
+                            apiKey = key,
+                            tenantId = tenant,
+                            getInTouchLink = link,
+                            getInTouchText = text,
+                            enableBuiltInReceipt = true,
+                        )
+                    }
+                }
             }
-        }
-    }
 
-    @PluginMethod(returnType = PluginMethod.RETURN_PROMISE)
-    fun initialise(call: PluginCall) {
+            override fun onActivityStarted(activity: Activity) = Unit
+            override fun onActivityResumed(activity: Activity) = Unit
+            override fun onActivityPaused(activity: Activity) = Unit
+            override fun onActivityStopped(activity: Activity) = Unit
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) = Unit
+            override fun onActivityDestroyed(activity: Activity) = Unit
+        })
 
-        val apiKey = call.getString("apiKey") ?: run {
-            Log.e(TAG, "")
-            call.reject("SDK API Key is missing.")
-            return
-        }
-        val tenantId = call.getString("tenantId") ?: run {
-            Log.e(TAG, "")
-            call.reject("tenantId is missing.")
-            return
-        }
-
-        val getInTouchText = call.getString("getInTouchText", "Lipa Payments") as String
-        val getInTouchLink = call.getString("getInTouchText")
-        val enableBuiltInReceipt = call.getBoolean("enableBuiltInReceiptScreen", true) as Boolean
-
-        Log.d(TAG, "Parameters seem to be present... initializing...")
-
-        init(
-            apiKey = apiKey,
-            tenantId = tenantId,
-            env = Env.TESTING,
-            getInTouchLink = getInTouchLink,
-            getInTouchText = getInTouchText,
-            enableBuiltInReceipt = enableBuiltInReceipt,
-            call = call
-        )
+        super.load()
     }
 
     private fun init(
@@ -86,7 +75,7 @@ internal class LipaNFCSdkPlugin : Plugin() {
         call: PluginCall? = null
     ) {
         LipaNfcSDK.initialise(
-            application = activity.application,
+            application = application,
             apiKey = apiKey,
             tenantId = tenantId,
             env = env,
@@ -132,12 +121,18 @@ internal class LipaNFCSdkPlugin : Plugin() {
     @PluginMethod(returnType = PluginMethod.RETURN_PROMISE)
     fun setOperatorInfo(call: PluginCall) {
         val merchantId = call.getString("merchantId") ?: run {
-            call.reject("Merchant Id is missing")
+            val error = Json.encodeToString(
+                mapOf("result" to "SdkSetOperatorInfoError", "message" to "Merchant Id is missing")
+            )
+            call.reject(error)
             return
         }
         val operatorId = call.getString("operatorId") ?: merchantId
         val merchantName = call.getString("merchantName") ?: run {
-            call.reject("Merchant name is missing")
+            val error = Json.encodeToString(
+                mapOf("result" to "SdkSetOperatorInfoError", "message" to "Merchant name is missing")
+            )
+            call.reject(error)
             return
         }
         val terminalNickName = call.getString("terminalNickName") ?: "$merchantName-$merchantId's device"
@@ -152,12 +147,16 @@ internal class LipaNFCSdkPlugin : Plugin() {
         ) {
             if (it is SdkLifeCycleEvent.SdkSetOperatorInfoError) {
                 Log.e(TAG, it.message)
-                call.reject(it.message)
+                val error = Json.encodeToString(
+                    mapOf("result" to "SdkSetOperatorInfoError", "message" to it.message)
+                )
+                call.reject(error)
             }
 
             if (it is SdkLifeCycleEvent.SdkSetOperatorInfoSuccess) {
                 Log.i(TAG, "Setting operator info was successful!!")
-                call.resolve()
+                val result = Json.encodeToString(mapOf("result" to "SdkSetOperatorInfoSuccess"))
+                call.resolve(JSObject(result))
             }
         }
     }
@@ -170,25 +169,15 @@ internal class LipaNFCSdkPlugin : Plugin() {
             when(transactionEvent) {
                 SDKTransactionEvent.SDKTransactionStarted,
                 is SDKTransactionEvent.SDKOnMorePaymentOptions -> Unit
-                is SDKTransactionEvent.SDKOnTransactionError -> {
-                    call.resolve(
-                        JSObject(
-                            Gson().toJson(transactionEvent.transactionResult)
-                        )
-                    )
-                }
-                is SDKTransactionEvent.SDKOnTransactionApproved -> {
-                    call.resolve(
-                        JSObject(
-                            Gson().toJson(transactionEvent.transactionResult)
-                        )
-                    )
-                }
+                is SDKTransactionEvent.SDKOnTransactionError,
+                is SDKTransactionEvent.SDKOnTransactionApproved,
                 is SDKTransactionEvent.SDKOnTransactionDeclined -> {
+                    val result = (transactionEvent as? SDKTransactionEvent.SDKOnTransactionApproved)?.transactionResult
+                        ?: (transactionEvent as? SDKTransactionEvent.SDKOnTransactionDeclined)?.transactionResult
+                        ?: (transactionEvent as SDKTransactionEvent.SDKOnTransactionError)?.transactionResult
+
                     call.resolve(
-                        JSObject(
-                            Gson().toJson(transactionEvent.transactionResult)
-                        )
+                        JSObject(Gson().toJson(result))
                     )
                 }
                 is SDKTransactionEvent.SDKTransactionInitialisationError -> {

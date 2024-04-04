@@ -97,7 +97,8 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation 'androidx.core:core-ktx:1.6.0'
 
-    implementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240322.102917.a0d2d2dd") {
+    debugImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240404.085633.92afd7ee") {
+        exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
         exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
     }
 
