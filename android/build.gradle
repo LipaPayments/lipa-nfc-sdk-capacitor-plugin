@@ -6,8 +6,8 @@ ext {
     androidxJunitVersion = project.hasProperty('androidxJunitVersion') ? rootProject.ext.androidxJunitVersion : '1.1.5'
     androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? rootProject.ext.androidxEspressoCoreVersion : '3.5.1'
 }
-def _kotlin_version = "1.9.0"
 buildscript {
+    def _kotlin_version = "1.9.0"
     ext {
         kotlin_version = _kotlin_version
     }
@@ -54,6 +54,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    flavorDimensions "protection"
+    productFlavors {
+        kotlinBased {
+            dimension "protection"
+
+        }
+
+        javaBased {
+            dimension "protection"
+        }
+    }
     lintOptions {
         abortOnError false
     }
@@ -70,7 +82,18 @@ android {
         implementation("io.github.pdvrieze.xmlutil:serialization-android:0.86.3") {
             exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
         }
+
+        kotlinBasedImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240404.085633.92afd7ee") {
+            exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
+            exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
+        }
+
+        javaBasedImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk", version: "release_v2.0.1_experimental.1+wbc.test.20240403.093338.e5f58573") {
+            exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
+            exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
+        }
     }
+
 }
 
 repositories {
@@ -96,15 +119,6 @@ dependencies {
     implementation project(':capacitor-android')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation 'androidx.core:core-ktx:1.6.0'
-
-    debugImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240404.085633.92afd7ee") {
-        exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
-        exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
-    }
-    releaseImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk", version: "release_v2.0.1_experimental.1+wbc.test.20240403.093338.e5f58573") {
-        exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
-        exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
-    }
 
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

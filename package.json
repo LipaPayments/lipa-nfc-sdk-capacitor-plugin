@@ -1,6 +1,6 @@
 {
   "name": "@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "A wrapper of the native Android Lipa NFC SDK for Capacitor.",
   "main": "dist/plugin.cjs.js",
   "module": "dist/esm/index.js",
