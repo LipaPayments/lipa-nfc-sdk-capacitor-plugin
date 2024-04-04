@@ -6,10 +6,10 @@ ext {
     androidxJunitVersion = project.hasProperty('androidxJunitVersion') ? rootProject.ext.androidxJunitVersion : '1.1.5'
     androidxEspressoCoreVersion = project.hasProperty('androidxEspressoCoreVersion') ? rootProject.ext.androidxEspressoCoreVersion : '3.5.1'
 }
-
+def _kotlin_version = "1.9.0"
 buildscript {
     ext {
-        kotlin_version = '1.9.22'
+        kotlin_version = _kotlin_version
     }
     repositories {
         google()
@@ -17,7 +17,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.0.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$_kotlin_version"
         classpath 'net.saliman:gradle-properties-plugin:1.5.2'
     }
 }
@@ -98,6 +98,10 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.6.0'
 
     debugImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240404.085633.92afd7ee") {
+        exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
+        exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
+    }
+    releaseImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk", version: "release_v2.0.1_experimental.1+wbc.test.20240403.093338.e5f58573") {
         exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
         exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
     }

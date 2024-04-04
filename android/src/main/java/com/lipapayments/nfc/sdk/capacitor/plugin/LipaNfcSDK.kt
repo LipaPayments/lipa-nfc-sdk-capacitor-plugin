@@ -135,23 +135,27 @@ object LipaNfcSDK {
         onEvent: (SdkLifeCycleEvent) -> Unit,
     ) {
         if (!initialised) {
-            LipaTapSDK.initialize(context = application,
-                getInTouchText = getInTouchText,
-                getInTouchLink = getInTouchLink,
-                enableBuiltInReceiptScreen = enableBuiltInReceiptScreen,
+            LipaTapSDK.INSTANCE.initialize(/*context = */application,
+                                           /*integratorAppGitHash:*/ "",
+            /*client: String = */"LIPA",
+                /*getInTouchText = */getInTouchText,
+                /*getInTouchLink = */getInTouchLink,
+                /*enableBuiltInReceiptScreen = */enableBuiltInReceiptScreen,
+
+            /*premium: Boolean =*/ false,
             )
             initialised = true
         }
-        onEvent(SdkInitialised)
+        onEvent(SdkInitialised.INSTANCE)
         NFCSdkConfiguration.configure(
             /*baseUrl =*/env.url,
             /*apiKey =*/ apiKey,
             /*tenantId =*/ tenantId,
         )
-        onEvent(SdkConfigured)
+        onEvent(SdkConfigured.INSTANCE)
         startupManager = StartupManager(object : IStartupListener {
             override fun onSuccess() {
-                onEvent(SdkStartUpSuccess)
+                onEvent(SdkStartUpSuccess.INSTANCE)
                 DeviceStateUIAdapter.setDeviceStateUIListener(object : IDeviceStateUIListener {
                     override fun onDeviceStateChange(activated: Boolean) {
                         if (!activated) {
@@ -176,7 +180,7 @@ object LipaNfcSDK {
             override fun onError(error: String) {
                 onEvent(SdkStartUpError("Startup Error: $error"))
             }
-        }, listOf(), object : VersionCheckCallback {
+        }, listOf<String>(), object : VersionCheckCallback {
             override fun onResult(isValid: Boolean, isError: Boolean) {
                 if (isValid) {
                     onEvent(SdkVersionCheck(true, "Valid Version"))
@@ -190,7 +194,7 @@ object LipaNfcSDK {
             }
         })
         startupManager.initializeNfcSDK()
-        onEvent(SdkStartUpInitialised)
+        onEvent(SdkStartUpInitialised.INSTANCE)
 
     }
 
@@ -216,14 +220,14 @@ object LipaNfcSDK {
                         return@channelFlow
                     }
                     val res = startupManager.setOperatorInfo(
-                        merchantName = merchantName,
-                        merchantId = merchantId,
-                        operatorId = operatorId,
-                        terminalNickname = terminalNickname,
-                        externalMerchant = externalMerchant,
+                        /* merchantName = */ merchantName,
+                        /* merchantId = */ merchantId,
+                        /* operatorId = */ operatorId,
+                        /* terminalNickname = */ terminalNickname,
+                        /* externalMerchant = */ externalMerchant,
                     )
                     if (res.operatorUpdated)
-                        send(SdkSetOperatorInfoSuccess)
+                        send(SdkSetOperatorInfoSuccess.INSTANCE)
                     else
                         send(SdkSetOperatorInfoError("Failed to set operator info. ${res.message}"))
                 } catch (e: Exception) {
@@ -271,14 +275,14 @@ object LipaNfcSDK {
                 override fun onTransactionFinished(transactionStatus: TransactionStatus) {
                     Log.d(TAG, "Transaction Finished with status = $transactionStatus")
                     val event = when (transactionStatus.transactionResult) {
-                        APPROVED -> SDKOnTransactionApproved(transactionResult = transactionStatus)
-                        DECLINED -> SDKOnTransactionDeclined(transactionResult = transactionStatus)
+                        APPROVED -> SDKOnTransactionApproved(/*transactionResult = */transactionStatus)
+                        DECLINED -> SDKOnTransactionDeclined(/*transactionResult =*/ transactionStatus)
                         MORE_PAYMENT_OPTIONS -> SDKOnMorePaymentOptions(
-                            amount = transactionStatus.amount?.toLongOrNull()
+                            /*amount =*/ transactionStatus.amount?.toLongOrNull()
                         )
 
                         CANCELLED, RESTART, TIMEOUT, ERROR -> SDKOnTransactionError(
-                            transactionResult = transactionStatus
+                           /* transactionResult = */transactionStatus
                         )
                     }
                     onEvent(event)
@@ -286,9 +290,10 @@ object LipaNfcSDK {
                 }
             },
             /* amount = */ amount,
+            /*allowMorePaymentOptions =*/ true,
         )
         val event = when (res) {
-            STARTED -> SDKTransactionStarted
+            STARTED -> SDKTransactionStarted.INSTANCE
             NFC_NOT_ENABLED -> SDKTransactionInitialisationError("NFC_NOT_ENABLED")
         }
         onEvent(event)

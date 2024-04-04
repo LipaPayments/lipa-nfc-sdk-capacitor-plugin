@@ -84,15 +84,15 @@ internal class LipaNFCSdkPlugin : Plugin() {
             enableBuiltInReceiptScreen = enableBuiltInReceipt
         ) { sdkLifecycleEvent ->
             when(sdkLifecycleEvent) {
-                SdkLifeCycleEvent.SdkConfigured,
+                SdkLifeCycleEvent.SdkConfigured.INSTANCE,
                 is SdkLifeCycleEvent.SdkDeviceState,
-                SdkLifeCycleEvent.SdkInitialised,
-                SdkLifeCycleEvent.SdkSetOperatorInfoSuccess,
-                SdkLifeCycleEvent.SdkStartUpInitialised,
+                SdkLifeCycleEvent.SdkInitialised.INSTANCE,
+                SdkLifeCycleEvent.SdkSetOperatorInfoSuccess.INSTANCE,
+                SdkLifeCycleEvent.SdkStartUpInitialised.INSTANCE,
                 is SdkLifeCycleEvent.SdkVersionCheck -> {
                     Log.i(TAG, "Completed event from SDK: ${sdkLifecycleEvent::class.java.simpleName}...")
                 }
-                SdkLifeCycleEvent.SdkStartUpSuccess -> {
+                SdkLifeCycleEvent.SdkStartUpSuccess.INSTANCE -> {
                     Log.i(TAG, "SDK initialization successful!!")
                     call?.resolve(
                         JSObject(
@@ -167,14 +167,14 @@ internal class LipaNFCSdkPlugin : Plugin() {
         Log.i(TAG, "Amount: $amount")
         LipaNfcSDK.startTransaction(amount) { transactionEvent ->
             when(transactionEvent) {
-                SDKTransactionEvent.SDKTransactionStarted,
+                SDKTransactionEvent.SDKTransactionStarted.INSTANCE,
                 is SDKTransactionEvent.SDKOnMorePaymentOptions -> Unit
                 is SDKTransactionEvent.SDKOnTransactionError,
                 is SDKTransactionEvent.SDKOnTransactionApproved,
                 is SDKTransactionEvent.SDKOnTransactionDeclined -> {
                     val result = (transactionEvent as? SDKTransactionEvent.SDKOnTransactionApproved)?.transactionResult
                         ?: (transactionEvent as? SDKTransactionEvent.SDKOnTransactionDeclined)?.transactionResult
-                        ?: (transactionEvent as SDKTransactionEvent.SDKOnTransactionError)?.transactionResult
+                        ?: (transactionEvent as? SDKTransactionEvent.SDKOnTransactionError)?.transactionResult
 
                     call.resolve(
                         JSObject(Gson().toJson(result))
