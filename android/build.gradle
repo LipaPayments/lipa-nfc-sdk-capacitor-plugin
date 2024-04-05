@@ -77,18 +77,23 @@ android {
         jvmTarget = '11'
     }
 
+    configurations {
+        kotlinBasedDebugImplementation {}
+        javaBasedReleaseImplementation {}
+    }
+
     dependencies {
         implementation("io.github.pdvrieze.xmlutil:core-android:0.86.3")
         implementation("io.github.pdvrieze.xmlutil:serialization-android:0.86.3") {
             exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
         }
 
-        kotlinBasedImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240404.085633.92afd7ee") {
+        kotlinBasedDebugImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240404.085633.92afd7ee") {
             exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
             exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
         }
 
-        javaBasedImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk", version: "release_v2.0.1_experimental.1+wbc.test.20240403.093338.e5f58573") {
+        javaBasedReleaseImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk", version: "release_v2.0.1_experimental.1+wbc.test.20240403.093338.e5f58573") {
             exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
             exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
         }
