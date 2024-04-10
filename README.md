@@ -65,6 +65,19 @@ The json file should contain the following:
 
 ## Usage
 
+#### Listening to NFC SDK initialization terminal events:
+```js
+LipaNFCSdk.listenToSdkInitEvents().then((sdkInitEvent) => {
+    console.log(sdkInitEvent);
+    alert("Sdk inititialization complete.")
+}).catch((error) => {
+    console.log("Failed to alert. error: ", error);
+    const inititializationErrorMessage = JSON.parse(error?.message);
+    alert(inititializationErrorMessage?.message)
+})
+```
+_***Note: This function should be called immediately after the JS layer of the app has been loaded and is the UI is showing to the user.**_
+
 #### Linking terminal:
 ```ts
 const linkingResult = await LipaNFCSdk.setOperatorInfo({
@@ -85,7 +98,7 @@ if (linkingResult.result == SetOperatorResult.SdkSetOperatorInfoSuccess) {
 ```ts
 const transactionResult = await LipaNFCSdk.startTransaction({ amount: 10000 });
 ```
-_Note: The expected amount type is a Long. Since JS/TS only offer the type number, do ensure that the amount is multiplied by 100 to account for decimals. With that said, the snippet above is for a R 100.00 transaction._
+_***Note: The expected amount type is a Long. Since JS/TS only offer the type number, do ensure that the amount is multiplied by 100 to account for decimals. With that said, the snippet above is for a R 100.00 transaction.**_
 
 ## API
 
