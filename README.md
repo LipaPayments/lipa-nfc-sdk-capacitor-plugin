@@ -6,8 +6,62 @@ A wrapper of the native Android Lipa NFC SDK for Capacitor.
 
 ```bash
 npm install @lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin
-npx cap sync
 ```
+
+## Setup
+After installing the plugin onto your project there is some configuration needed before you are able to import the payment SDK into you project. 
+
+#### Gradle Config
+The plugin under the hood uses the Lipa NFC SDK which is a native android sdk and is hosted in remote maven repositories hence the need for gradle configuraion to pull the dependency onto your project. 
+
+To pull the project into your project, the plugin requires a `gradle-local.properties` to created in the `/android/` folder of your project.
+The file should contain the following values assigned:
+```properties
+# maven repo credentials
+lipaMavenArtifactsUrl=
+lipaNFCSDKMavenArtifactsFeedName=
+lipaMavenArtifactsUserName=
+lipaCustomMavenArtifactsToken=
+```
+#### NOTE: THIS FILE SHOULD INLCUDED IN YOUR PROJECT'S `.gitignore` FILE.
+
+For the plugin to read this configuration, it needs the following gradle plugin to be applied.
+Here is an example of how to apply it:
+
+Groovy Gradle DSL:\
+Legacy plugin application: 
+```groovy
+buildscript {
+  repositories {
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
+  }
+  dependencies {
+    classpath "net.saliman:gradle-properties-plugin:1.4.6"
+  }
+}
+
+apply plugin: "net.saliman.properties"
+```
+
+For more information and latest integration guide, [here](https://github.com/stevesaliman/gradle-properties-plugin).
+
+#### SDK initialization
+For the plugin to initialise the underlying Lipa NFC SDK it requires a `config.json` to created in the `android/app/src/main/assets/` folder of your project.
+The json file should contain the following: 
+```json
+{
+  "env": "DEV",
+  "enableBuiltInReceipt": "true",
+  "getInTouchText": "Example Text",
+  "getInTouchLink": "https://www.example.com/contact-us",
+  "paymentLauncherActivityName": "com.example.plugin.MainActivity",
+  "tenantId": "XXXX",
+  "apiKey": "XXXXX"
+}
+```
+#### NOTE: THIS FILE SHOULD INLCUDED IN YOUR PROJECT'S `.gitignore` FILE.
 
 ## Usage
 
@@ -37,6 +91,7 @@ _Note: The expected amount type is a Long. Since JS/TS only offer the type numbe
 
 <docgen-index>
 
+* [`listenToSdkInitEvents()`](#listentosdkinitevents)
 * [`setOperatorInfo(...)`](#setoperatorinfo)
 * [`startTransaction(...)`](#starttransaction)
 * [Interfaces](#interfaces)
@@ -47,10 +102,27 @@ _Note: The expected amount type is a Long. Since JS/TS only offer the type numbe
 <docgen-api>
 <!--Update the source file JSDoc comments and rerun docgen to update the docs below-->
 
+### listenToSdkInitEvents()
+
+```typescript
+listenToSdkInitEvents() => Promise<SdkResponse<SdkInitializationResult>>
+```
+
+Registers SDK initialization events handlers for the initialization terminal states and returns the first terminal event to be emitted by the native layer.
+Since this function registers event handlers for terminal states, it means that this will return the result that indicates whether the SDK initialized
+successfully or not.
+
+**Returns:** <code>Promise&lt;<a href="#sdkresponse">SdkResponse</a>&lt;<a href="#sdkinitializationresult">SdkInitializationResult</a>&gt;&gt;</code>
+
+**Since:** 0.1.3
+
+--------------------
+
+
 ### setOperatorInfo(...)
 
 ```typescript
-setOperatorInfo(options: SetOperatorOptions) => Promise<SetOperatorResponse>
+setOperatorInfo(options: SetOperatorOptions) => Promise<SdkResponse<SetOperatorResult>>
 ```
 
 Links an operator to the terminal/device.
@@ -59,7 +131,7 @@ Links an operator to the terminal/device.
 | ------------- | ----------------------------------------------------------------- |
 | **`options`** | <code><a href="#setoperatoroptions">SetOperatorOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#setoperatorresponse">SetOperatorResponse</a>&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#sdkresponse">SdkResponse</a>&lt;<a href="#setoperatorresult">SetOperatorResult</a>&gt;&gt;</code>
 
 **Since:** 0.0.1
 
@@ -88,12 +160,12 @@ Starts a transaction with the specied options.
 ### Interfaces
 
 
-#### SetOperatorResponse
+#### SdkResponse
 
-| Prop          | Type                                                            | Description                                          | Since |
-| ------------- | --------------------------------------------------------------- | ---------------------------------------------------- | ----- |
-| **`result`**  | <code><a href="#setoperatorresult">SetOperatorResult</a></code> | The result of calling `setOperatorInfo(...)` .       | 0.0.1 |
-| **`message`** | <code>string</code>                                             | The message that specifies why an error has occured. | 0.0.1 |
+| Prop          | Type                | Description                                          | Since |
+| ------------- | ------------------- | ---------------------------------------------------- | ----- |
+| **`result`**  | <code>T</code>      | The result of calling `setOperatorInfo(...)` .       | 0.0.1 |
+| **`message`** | <code>string</code> | The message that specifies why an error has occured. | 0.0.1 |
 
 
 #### SetOperatorOptions
@@ -164,6 +236,15 @@ Starts a transaction with the specied options.
 
 
 ### Enums
+
+
+#### SdkInitializationResult
+
+| Members                    | Description                                                                          | Since |
+| -------------------------- | ------------------------------------------------------------------------------------ | ----- |
+| **`SdkStartUpSuccess`**    | Indicates that SDK initialization was successful.                                    | 0.1.3 |
+| **`SdkStartUpError`**      | Indicates that an error occured during the SDK initialization start-up process.      | 0.1.3 |
+| **`SdkVersionCheckError`** | Indicates that an error occured during the SDK initialization version-check process. | 0.1.3 |
 
 
 #### SetOperatorResult

@@ -9,8 +9,10 @@ import com.getcapacitor.annotation.CapacitorPlugin
 import com.google.gson.Gson
 import com.lipa.tap.attestation.domain.models.SDKTransactionEvent
 import com.lipa.tap.transaction.domain.SdkLifeCycleEvent
+import com.lipa.tap.utils.Env
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.reflect.KClass
 
 @CapacitorPlugin(name = "LipaNFCSdk")
 internal class LipaNFCSdkPlugin : Plugin() {
@@ -21,6 +23,22 @@ internal class LipaNFCSdkPlugin : Plugin() {
     }
 
     private val application by lazy { activity.application }
+
+    private val successHandler: (SdkLifeCycleEvent, PluginCall?) -> Unit = { event, call ->
+        if (event is SdkLifeCycleEvent.SdkStartUpSuccess) Log.i(TAG, "SDK initialization successful!!")
+        call?.resolve(
+            JSObject(
+                Json.encodeToString(mapOf("event" to event::class.java.simpleName))
+            )
+        )
+    }
+    private val errorHandler: (SdkLifeCycleEvent.SdkLifeCycleError, PluginCall?) -> Unit = { error, call ->
+        Log.e(TAG, error.message)
+        val result = Json.encodeToString(
+            mapOf("event" to error::class.java.simpleName, "message" to error.message)
+        )
+        call?.reject(result)
+    }
 
     override fun load() {
         Log.i(TAG, "Loading...")
@@ -37,18 +55,34 @@ internal class LipaNFCSdkPlugin : Plugin() {
                     )
                 } else {
                     with(config as SdkInitializationConfig) {
-                        val key = this.apiKey
-                        val tenant = this.tenantId
-                        val link = this.getInTouchLink
-                        val text = this.getInTouchText
+
+                        val paymentLauncherActivity = try {
+                            val paymentActivity = Class.forName(paymentLauncherActivityName).kotlin
+                            if (paymentActivity.isInstance(activity)) {
+                                Log.d(TAG, "PaymentLauncherActivity is Activity: ${true}")
+                            }
+                            Log.d(TAG, "Classname: ${ paymentActivity.qualifiedName }")
+                            Log.d(TAG, "Is this class the same as the launcher class: ${ paymentActivity == this::class  }")
+                            paymentActivity as KClass<out Activity>
+                        } catch (ex: Exception) {
+                            Log.e(
+                                TAG,
+                                "Provided Payment Launching Activity Class: $paymentLauncherActivityName was not found in the application.",
+                                ex
+                            )
+                            Log.i(TAG, "Load terminated...")
+                            return
+                        }
+
                         Log.i(TAG, "Load initializing...")
-                        init(
+                        initSdk(
                             env = Env.TESTING,
-                            apiKey = key,
-                            tenantId = tenant,
-                            getInTouchLink = link,
-                            getInTouchText = text,
+                            apiKey = apiKey,
+                            tenantId = tenantId,
+                            getInTouchLink = getInTouchLink,
+                            getInTouchText = getInTouchText,
                             enableBuiltInReceipt = true,
+                            paymentLauncherActivity = paymentLauncherActivity
                         )
                     }
                 }
@@ -65,23 +99,25 @@ internal class LipaNFCSdkPlugin : Plugin() {
         super.load()
     }
 
-    private fun init(
+    private fun initSdk(
         apiKey: String,
         tenantId: String,
         env: Env,
         getInTouchLink: String?,
         getInTouchText: String,
         enableBuiltInReceipt: Boolean = false,
+        paymentLauncherActivity: KClass<out Activity>,
         call: PluginCall? = null
     ) {
         LipaNfcSDK.initialise(
-            application = application,
+            env = env,
             apiKey = apiKey,
             tenantId = tenantId,
-            env = env,
+            application = application,
             getInTouchLink = getInTouchLink,
             getInTouchText = getInTouchText,
-            enableBuiltInReceiptScreen = enableBuiltInReceipt
+            enableBuiltInReceiptScreen = enableBuiltInReceipt,
+            paymentLauncherActivity = paymentLauncherActivity,
         ) { sdkLifecycleEvent ->
             when(sdkLifecycleEvent) {
                 SdkLifeCycleEvent.SdkConfigured,
@@ -92,29 +128,28 @@ internal class LipaNFCSdkPlugin : Plugin() {
                 is SdkLifeCycleEvent.SdkVersionCheck -> {
                     Log.i(TAG, "Completed event from SDK: ${sdkLifecycleEvent::class.java.simpleName}...")
                 }
-                SdkLifeCycleEvent.SdkStartUpSuccess -> {
-                    Log.i(TAG, "SDK initialization successful!!")
-                    call?.resolve(
-                        JSObject(
-                            Json.encodeToString(
-                                mapOf("event" to sdkLifecycleEvent::class.java.simpleName)
-                            )
-                        )
-                    )
-                }
+                SdkLifeCycleEvent.SdkStartUpSuccess -> successHandler(sdkLifecycleEvent, call)
                 is SdkLifeCycleEvent.SdkSetOperatorInfoError,
                 is SdkLifeCycleEvent.SdkStartUpError,
                 is SdkLifeCycleEvent.SdkVersionCheckError -> {
                     Log.e(TAG, (sdkLifecycleEvent as SdkLifeCycleEvent.SdkLifeCycleError).message)
-                    val error = Json.encodeToString(
-                        mapOf(
-                            "event" to sdkLifecycleEvent::class.java.simpleName,
-                            "message" to sdkLifecycleEvent.message
-                        )
-                    )
-                    call?.reject(error)
+                    errorHandler(sdkLifecycleEvent, call)
                 }
             }
+        }
+    }
+
+    @PluginMethod(returnType = PluginMethod.RETURN_PROMISE)
+    fun listenToSdkInitEvents(call: PluginCall) {
+        Log.i(TAG, "Registering Listeners...")
+        LipaNfcSDK.on(SdkLifeCycleEvent.SdkStartUpSuccess::class) {
+            Log.i(TAG, "Running listener success handler")
+            successHandler(it, call)
+        }
+
+        LipaNfcSDK.on(SdkLifeCycleEvent.SdkStartUpError::class) {
+            Log.i(TAG, "Running listener error handler")
+            errorHandler(it, call)
         }
     }
 
@@ -186,4 +221,5 @@ internal class LipaNFCSdkPlugin : Plugin() {
             }
         }
     }
+
 }

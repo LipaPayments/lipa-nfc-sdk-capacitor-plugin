@@ -9,4 +9,4 @@ include ':capacitor-splash-screen'
 project(':capacitor-splash-screen').projectDir = new File('../node_modules/@capacitor/splash-screen/android')
 
 include ':lipa-plugins-lipa-nfc-sdk-android-capacitor-plugin'
-project(':lipa-plugins-lipa-nfc-sdk-android-capacitor-plugin').projectDir = new File('../node_modules/@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin/android')
+project(':lipa-plugins-lipa-nfc-sdk-android-capacitor-plugin').projectDir = new File('../../android')

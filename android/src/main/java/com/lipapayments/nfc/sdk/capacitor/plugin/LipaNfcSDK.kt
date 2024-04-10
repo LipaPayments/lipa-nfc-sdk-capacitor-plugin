@@ -3,7 +3,6 @@ package com.lipapayments.nfc.sdk.capacitor.plugin
 import android.app.Activity
 import android.app.Application
 import android.util.Log
-import androidx.annotation.Keep
 import com.lipa.tap.attestation.domain.models.SDKTransactionEvent
 import com.lipa.tap.attestation.domain.models.SDKTransactionEvent.*
 import com.lipa.tap.sdkManagement.adapter.out.DeviceStateUIAdapter
@@ -16,13 +15,11 @@ import com.lipa.tap.transaction.domain.enums.NFCTransactionStartResult.STARTED
 import com.lipa.tap.transaction.domain.enums.TransactionResult.*
 import com.lipa.tap.transaction.domain.models.MorePaymentOptionsData
 import com.lipa.tap.transaction.domain.models.TransactionStatus
+import com.lipa.tap.utils.*
 import com.lipa.tap.utils.listeners.ITransactionListener
 import com.lipa.tap.utils.startup.StartupManager
-import com.lipa.tap.utils.LipaTapSDK
-import com.lipa.tap.utils.NFCSdkConfiguration
-import com.lipa.tap.utils.IStartupListener
-import com.lipa.tap.utils.TransactionManager
 import com.lipapayments.nfc.sdk.capacitor.plugin.EventMap.map
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.channelFlow
@@ -50,25 +47,25 @@ object EventMap {
 
     fun <T : SdkLifeCycleEvent> getListener(event: KClass<T>) = map[event]?.firstOrNull()
 
-    fun onEvent(event: SdkLifeCycleEvent) {
-        Log.d(TAG, "Running callback for $event")
-        map.forEach { (evt, callbacks) ->
-            if (evt == event) {
+    fun onEvent(triggeredEvent: SdkLifeCycleEvent) {
+        map.forEach { (registeredEvent, callbacks) ->
+
+            if (triggeredEvent isInstanceOf registeredEvent) {
                 callbacks.forEach { callback ->
                     try {
-                        callback(event)
-                    } catch (e: Exception) {
-                        Log.d(TAG, "Failed to run additional integrator callback")
+                        Log.i(TAG, "Running callback for $triggeredEvent")
+                        callback(triggeredEvent)
+                    } catch (e: Throwable) {
+                        Log.e(TAG, "Failed to run additional integrator callback", e)
                     }
                 }
             }
         }
 
     }
-}
 
-enum class Env(val url: String) {
-    TESTING("https://dev-gateway.lipapayments.com"), DEV("https://stage-gateway.lipapayments.com"), PROD("https://api.lipapayments.com");
+    private inline infix fun <reified T> T.isInstanceOf(base: KClass<*>) =
+        base.java.isInstance(this) || T::class == base
 }
 
 @Experimental
@@ -90,11 +87,12 @@ object LipaNfcSDK {
         tenantId: String,
         env: Env = Env.PROD,
         getInTouchText: String = "Lipa Payments",
-        getInTouchLink: String? = null,
+        getInTouchLink: String? = "https://www.lipapayments.com/contact-us",
         enableBuiltInReceiptScreen: Boolean = true,
+        paymentLauncherActivity: KClass<out Activity>,
         onEvent: (SdkLifeCycleEvent) -> Unit,
     ) {
-        SDKScope.launch {// works
+        SDKScope.launch {
 
             channelFlow {
                 init(
@@ -105,13 +103,12 @@ object LipaNfcSDK {
                     getInTouchText,
                     getInTouchLink,
                     enableBuiltInReceiptScreen,
+                    paymentLauncherActivity,
                 ) {
                     runBlocking { send(it) }
                 }
 
-                awaitClose {
-                    // Keep me aliiiiive
-                }
+                awaitClose()
             }.collect {
                 try {
                     onEvent(it)
@@ -130,15 +127,18 @@ object LipaNfcSDK {
         application: Application,
         env: Env,
         getInTouchText: String = "Lipa Payments",
-        getInTouchLink: String? = null,
+        getInTouchLink: String?,
         enableBuiltInReceiptScreen: Boolean = true,
+        paymentLauncherActivity: KClass<out Activity>,
         onEvent: (SdkLifeCycleEvent) -> Unit,
     ) {
         if (!initialised) {
-            LipaTapSDK.initialize(context = application,
+            LipaTapSDK.initialize(
+                context = application,
                 getInTouchText = getInTouchText,
                 getInTouchLink = getInTouchLink,
                 enableBuiltInReceiptScreen = enableBuiltInReceiptScreen,
+                paymentLauncherActivity = paymentLauncherActivity
             )
             initialised = true
         }

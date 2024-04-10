@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
+import com.lipa.tap.utils.Env
 import com.lipapayments.nfc.sdk.capacitor.plugin.LipaNFCSdkPlugin.Companion.TAG
 import java.io.InputStreamReader
 
@@ -12,7 +13,7 @@ internal fun Context.readConfigFile(): SdkInitializationConfig? {
     Log.i(TAG, "Reading config file...")
 
     val jsonString = try {
-        resources.assets.open("config.json").use { inputStream ->
+        resources.assets.open("lipa-nfc-sdk-config.json").use { inputStream ->
             InputStreamReader(inputStream).readText()
         }
     } catch (ex: Exception) {
@@ -31,8 +32,11 @@ internal fun Context.readConfigFile(): SdkInitializationConfig? {
 }
 
 internal data class SdkInitializationConfig(
+    val env: Env,
     val apiKey: String,
+    val tenantId: String,
     val getInTouchLink: String,
     val getInTouchText: String,
-    val tenantId: String
+    val paymentLauncherActivityName: String,
+    val enableBuiltInReceipt: Boolean = true
 )

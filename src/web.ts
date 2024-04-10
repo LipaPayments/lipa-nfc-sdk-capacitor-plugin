@@ -1,8 +1,11 @@
 import { WebPlugin } from '@capacitor/core';
 
-import { LipaNFCSdkPlugin, SetOperatorResponse, TransactionResult } from './definitions';
+import { LipaNFCSdkPlugin, SdkInitializationResult, SdkResponse, SetOperatorResult, TransactionResult } from './definitions';
 
 export class LipaNFCSdkWeb extends WebPlugin implements LipaNFCSdkPlugin {
+  listenToSdkInitEvents(): Promise<SdkResponse<SdkInitializationResult>> {
+    throw new Error('Method not implemented.');
+  }
   setOperatorInfo(
     options: { 
       merchantId: string; 
@@ -10,7 +13,7 @@ export class LipaNFCSdkWeb extends WebPlugin implements LipaNFCSdkPlugin {
       merchantName: string; 
       terminalNickname: string; 
     }
-  ): Promise<SetOperatorResponse> {
+  ): Promise<SdkResponse<SetOperatorResult>> {
     console.log(options)
     throw new Error('Method not implemented.');
   }

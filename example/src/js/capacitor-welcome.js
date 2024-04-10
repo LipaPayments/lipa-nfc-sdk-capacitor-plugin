@@ -1,12 +1,21 @@
 import { SplashScreen } from '@capacitor/splash-screen';
 import config from '../assets/config/terminal-config.json';
-import { LipaNFCSdk } from '@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin';
+import { LipaNFCSdk, SetOperatorResult } from '@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin';
 
 window.customElements.define(
   'capacitor-welcome',
   class extends HTMLElement {
     constructor() {
       super();
+
+      LipaNFCSdk.listenToSdkInitEvents().then((sdkInitEvent) => {
+        console.log(sdkInitEvent);
+        alert("Sdk inititialization complete.")
+      }).catch((error) => {
+        console.log("Failed to alert. error: ", error);
+        const inititializationErrorMessage = JSON.parse(error?.message);
+        alert(inititializationErrorMessage?.message)
+      })
 
       SplashScreen.hide();
 
@@ -79,7 +88,7 @@ window.customElements.define(
         </p>
         <h2>Getting Started</h2>
         <p>
-          This button confifures the terminal.<strong>ONLY Press after 15 seconds of opening the app for the FIRST TIME</strong>
+          This button confifures the terminal.<br/><strong>ONLY Press after opening the app for the FIRST TIME</strong>
         </p>
         <p>
           <button class="button" id="set-operator">Set Operator</button>
@@ -109,7 +118,11 @@ window.customElements.define(
             operatorId: config.operatorId,
             merchantName: config.merchantName,
           });
-          alert(linkingResult.result);
+          if (linkingResult.result == SetOperatorResult.SdkSetOperatorInfoSuccess){
+            alert("Set operator successful.\nHappy transacting!")
+          } else {
+            alert(linkingResult.message);
+          }
         } catch (e) {
           console.warn('User cancelled', e);
         }
@@ -121,7 +134,6 @@ window.customElements.define(
             amount: 10000
           });
           console.log("Transaction done", transactionResult);
-          // alert("Transaction complete");
         } catch (e) {
           console.warn('User cancelled', e);
         }

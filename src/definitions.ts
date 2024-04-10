@@ -1,11 +1,20 @@
 export interface LipaNFCSdkPlugin {
 
   /**
+   *  Registers SDK initialization events handlers for the initialization terminal states and returns the first terminal event to be emitted by the native layer.
+   *  Since this function registers event handlers for terminal states, it means that this will return the result that indicates whether the SDK initialized
+   *  successfully or not.
+   *  @since 0.1.3
+   * 
+   */
+  listenToSdkInitEvents(): Promise<SdkResponse<SdkInitializationResult>>;
+
+  /**
    *  Links an operator to the terminal/device.
    *  @since 0.0.1
    * 
    */
-  setOperatorInfo(options: SetOperatorOptions): Promise<SetOperatorResponse>;
+  setOperatorInfo(options: SetOperatorOptions): Promise<SdkResponse<SetOperatorResult>>;
 
   /**
    *  Starts a transaction with the specied options.
@@ -13,6 +22,44 @@ export interface LipaNFCSdkPlugin {
    */
   startTransaction(options: StartTransactionOptions): Promise<TransactionResult>;
 
+}
+
+export interface SdkResponse<T> {
+  /**
+   *  The result of calling `setOperatorInfo(...)` .
+   *  
+   *  @since 0.0.1
+   */
+  result: T;
+  /**
+   *  The message that specifies why an error has occured.
+   *  
+   *  @since 0.0.1
+   */
+  message?: string
+}
+
+export enum SdkInitializationResult {
+  /**
+   * Indicates that SDK initialization was successful.
+   * 
+   * @since 0.1.3
+   */
+  SdkStartUpSuccess,
+
+  /**
+   * Indicates that an error occured during the SDK initialization start-up process.
+   * 
+   * @since 0.1.3
+   */
+  SdkStartUpError,
+
+  /**
+   * Indicates that an error occured during the SDK initialization version-check process.
+   * 
+   * @since 0.1.3
+   */
+  SdkVersionCheckError,
 }
 
 export interface SetOperatorOptions {
@@ -56,21 +103,6 @@ export interface StartTransactionOptions {
    *  @since 0.0.1
    */
   amount: number
-}
-
-export interface SetOperatorResponse {
-  /**
-   *  The result of calling `setOperatorInfo(...)` .
-   *  
-   *  @since 0.0.1
-   */
-  result: SetOperatorResult;
-  /**
-   *  The message that specifies why an error has occured.
-   *  
-   *  @since 0.0.1
-   */
-  message?: string
 }
 
 export enum SetOperatorResult {

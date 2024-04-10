@@ -1,6 +1,6 @@
 {
     "merchantId": "747cb595-f74c-4815",
-    "terminalNickName": "PluginSampleDevice",
-    "operatorId": "Author",
+    "terminalNickName": "SampleDevice",
+    "operatorId": "Some Person",
     "merchantName": "capacitor_plugin_example"
 }
