@@ -78,9 +78,9 @@ android {
 
     configurations {
         // https://developer.android.com/build/gradle-tips#groovy
-        kotlinBasedDebugImplementation {}
-        kotlinBasedReleaseImplementation {}
-        javaBasedDebugImplementation {}
+        // kotlinBasedDebugImplementation {}
+        // kotlinBasedReleaseImplementation {}
+        // javaBasedDebugImplementation {}
         javaBasedReleaseImplementation {}
     }
 
@@ -91,12 +91,12 @@ android {
         }
 
         // kotlinBasedDebugImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk-debug", version: "release_v2.0.1_experimental.1+wbc.test.20240404.085633.92afd7ee") {
-        kotlinBasedDebugImplementation(group: "com.lipa.tap", name: "shared-android", version: "release_v2.0.1_experimental.1+wbc.test.sunmi.camera.wbc.default.20240405.095325.29d3d444") {
-            exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
-            exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
-        }
+        // kotlinBasedDebugImplementation(group: "com.lipa.tap", name: "shared-android", version: "release_v2.0.1_experimental.1+wbc.test.sunmi.camera.wbc.default.20240405.095325.29d3d444") {
+        //     exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
+        //     exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
+        // }
 
-        javaBasedReleaseImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk", version: "release_v2.0.1_experimental.1+wbc.test.20240403.093338.e5f58573") {
+        javaBasedReleaseImplementation(group: "com.lipa.tap", name: "lipa-nfc-sdk", version: "release_v2.0.1_experimental.1+wbc.test.sunmi.camera.wbc.default_l3_fixes.20240411.164620.33faa36d") {
             exclude(group: "io.github.pdvrieze.xmlutil", module: "core")
             exclude(group: "io.github.pdvrieze.xmlutil", module: "serialization")
         }
