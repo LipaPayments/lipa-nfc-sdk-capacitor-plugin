@@ -28,6 +28,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.channelFlow
 import org.jetbrains.annotations.ApiStatus.Experimental
 import kotlin.reflect.KClass
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.resume
 
 object EventMap {
     internal val map: MutableMap<KClass<out SdkLifeCycleEvent>, List<(SdkLifeCycleEvent) -> Unit>> = mutableMapOf()
@@ -271,7 +273,9 @@ object LipaNfcSDK {
                     Log.d(TAG, "onMorePaymentOptionsClicked with $morePaymentOptionsData")
                     onEvent(SDKOnMorePaymentOptions(morePaymentOptionsData.amount))
                 }
-
+                override fun onTransactionResponse(p0: TransactionStatus, p1: Continuation<Unit>): Any? {
+                    return p1.resume(Unit)
+                }
                 override fun onTransactionFinished(transactionStatus: TransactionStatus) {
                     Log.d(TAG, "Transaction Finished with status = $transactionStatus")
                     val event = when (transactionStatus.transactionResult) {

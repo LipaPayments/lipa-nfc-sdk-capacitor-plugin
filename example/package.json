@@ -18,7 +18,7 @@
     "@capacitor/core": "^5.7.0",
     "@capacitor/ios": "^5.0.0",
     "@capacitor/splash-screen": "latest",
-    "@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin": "../"
+    "@lipa-plugins/lipa-nfc-sdk-android-capacitor-plugin": ".."
   },
   "devDependencies": {
     "@capacitor/cli": "latest",

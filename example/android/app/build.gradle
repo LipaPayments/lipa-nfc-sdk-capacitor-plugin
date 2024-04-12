@@ -42,6 +42,18 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+// The integrator needs to define these because we define them. Need to chat about this and clean it up
+    flavorDimensions "protection"
+    productFlavors {
+        kotlinBased {
+            dimension "protection"
+        }
+
+        javaBased {
+            dimension "protection"
+        }
+    }
 }
 
 repositories {
